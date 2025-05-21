@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:15
+    container_name: postgres-spring
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - spring-net
+
+  backend:
+    build: backend
+    container_name: springboot-app
+    platform: linux/amd64
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/mydb
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    ports:
+      - "8080:8080"
+    networks:
+      - spring-net
+
+  frontend:
+    build: ./frontend
+    container_name: angular-client
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
+    networks:
+      - spring-net
+
+volumes:
+  pgdata:
+
+networks:
+  spring-net:
